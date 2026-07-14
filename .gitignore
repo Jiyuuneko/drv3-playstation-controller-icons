@@ -1,0 +1,19 @@
+# Safety net for maintainer scratch data (the installer uses sibling DualSense_UI_Mod_Data/)
+.local/
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Never commit extracted or packed game data
+*.cpk
+*.spc
+*.srd
+*.srdv
+*.sfl

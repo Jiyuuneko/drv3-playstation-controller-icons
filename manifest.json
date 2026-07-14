@@ -1,0 +1,66 @@
+{
+  "project": "Danganronpa V3 PlayStation Controller Icons",
+  "version": "1.3.0-source",
+  "distribution_model": "Source-only builder; no extracted game files or official controller artwork are distributed.",
+  "supported_game": {
+    "name": "Danganronpa V3: Killing Harmony for PC",
+    "language_mode": "active-language-discovery",
+    "executable": {
+      "path": "Dangan3Win.exe",
+      "size": 11098832,
+      "sha256": "503073A67A2CC0056B7D11D400FB9736C65EEC46EC6877478E6FF1CCB6526438"
+    }
+  },
+  "language_archive": {
+    "game_path_pattern": "data/win/partition_data_win_{language_lower}.cpk",
+    "target_entry_pattern": "flash/help/help_tutorial_xone_{language}.spc",
+    "source_entry_pattern": "flash/help/help_tutorial_ps4_{language}.spc",
+    "scrum_entry_pattern": "flash/trial/t_scrum_push_{language}.spc"
+  },
+  "archive_patches": [
+    {
+      "id": "resident_runtime_glyphs",
+      "game_path": "data/win/partition_resident_win.cpk",
+      "archive_size": 2298785400,
+      "original_archive_sha256": "2DE9EA6AFA15A80F1079B027D441A6DCC8554C38832109A15C18ADB79B551CC6",
+      "payload_name": "game_resident.spc",
+      "target_entry": {
+        "path": "game_resident/game_resident.spc",
+        "backup_name": "game_resident.spc",
+        "allocation_size": 7141376,
+        "original_size": 7141168,
+        "original_sha256": "C08B81D5C193EB3F4CC096995CD7E3028840B735E6BBC0E9BEE5627121B59846"
+      },
+      "nested_original": {
+        "srd_size": 20176,
+        "srd_sha256": "79E66EC8CA8BFF651158A99B4B6F352D70360B4F9120B18A2EA6B36AA00DDC07",
+        "srdv_size": 974848,
+        "srdv_sha256": "F06077581FF7768FCC82F115556B96E0A38F376B1D5060EE688A551230DFB934"
+      }
+    }
+  ],
+  "redistributable_assets": [
+    {
+      "path": "assets/create.svg",
+      "sha256": "0FDB32C2EEEF204498008B22A56B538C6CD0048BADAF8F3C149D7ADD0121704C",
+      "license": "CC0-1.0"
+    },
+    {
+      "path": "assets/options.svg",
+      "sha256": "1D1D8F14A0F3ACA549EBDC0984B612E0F8FA59A94BA2BE0191AA189A005F4097",
+      "license": "CC0-1.0"
+    },
+    {
+      "path": "assets/create.dds",
+      "size": 8340,
+      "sha256": "DDB4A2D41CB844262C23FE9C168B910608E575FDC06AB2C6424BC4CDD4DF8C7D",
+      "license": "CC0-1.0"
+    },
+    {
+      "path": "assets/options.dds",
+      "size": 8340,
+      "sha256": "0F1FCF451582177ABC56FFA11BF6BC41DA1AD549F96A7FBBC01C813B8560FCAC",
+      "license": "CC0-1.0"
+    }
+  ]
+}
