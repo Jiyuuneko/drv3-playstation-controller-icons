@@ -27,7 +27,7 @@ Replaces the Xbox-style controller icons in **Danganronpa V3: Killing Harmony** 
 4. Run `DualSense_UI_Mod_Manager.bat`.
 5. Choose **1** for DualSense Create/Options icons or **2** for DualShock 4 SHARE/OPTIONS icons.
 
-Run the selected installer again after changing the game language to update the localized controller-help and Scrum Debate graphics.
+Run the selected installer again after changing the game language to update localized controller-help and minigame graphics.
 
 ## Uninstallation
 
@@ -47,7 +47,7 @@ Close the game, run `DualSense_UI_Mod_Manager.bat`, and choose **4**. If the com
 
 ## Notes
 
-- Shared runtime icons are language-independent. Controller-help and Scrum Debate graphics are patched for the currently active language.
+- Shared runtime icons are language-independent. Localized controller-help, Scrum Debate, Argument Armament, and other controller-guide graphics use their shipped PlayStation versions.
 - The controller-help illustration uses the game's shipped DualShock 4 artwork, not a custom DualSense controller drawing.
 - The mod changes displayed controller graphics only; it does not change controller detection, button mappings, or input settings.
 - For safety, the installer checks the game files it needs before writing and stops if they do not match a supported or previously installed state.

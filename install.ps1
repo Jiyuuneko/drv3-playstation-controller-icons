@@ -79,10 +79,13 @@ try {
         $candidate = Get-Content -Raw -LiteralPath $runtimeManifestPath | ConvertFrom-Json
         $candidatePatch = $candidate.archive_patches | Where-Object id -eq 'language_controller_help' | Select-Object -First 1
         $candidateScrumPatch = $candidate.archive_patches | Where-Object id -eq 'language_scrum_prompts' | Select-Object -First 1
+        $candidateArgumentArmamentPatch = $candidate.archive_patches | Where-Object id -eq 'language_argument_armament_prompts' | Select-Object -First 1
         if ($null -ne $candidatePatch -and
             $null -ne $candidateScrumPatch -and
+            $null -ne $candidateArgumentArmamentPatch -and
             $candidatePatch.game_path -eq $activeGamePath -and
-            $candidateScrumPatch.game_path -eq $activeGamePath) {
+            $candidateScrumPatch.game_path -eq $activeGamePath -and
+            $candidateArgumentArmamentPatch.game_path -eq $activeGamePath) {
             $classifyArgs = @($modTool, 'classify', '--manifest', $runtimeManifestPath, '--game-root', $gameRoot, '--entries-only')
             if ($null -ne $state) { $classifyArgs += @('--state', $statePath) }
             $candidateOutput = & $python @classifyArgs 2>$null
@@ -92,7 +95,7 @@ try {
         }
     }
     if (-not $reuseRuntimeManifest) {
-        Write-Host "Discovering the active $language controller-help and Scrum Debate resources..."
+        Write-Host "Discovering the active $language controller-help and minigame resources..."
         $prepareArgs = @(
             $modTool, 'prepare-language',
             '--manifest', $baseManifestPath,
@@ -176,7 +179,7 @@ try {
         }
 
         $patchAttempted = $true
-        Write-Host "Applying the resident, $language controller-help, and Scrum Debate replacements..."
+        Write-Host "Applying the resident, $language controller-help, and minigame replacements..."
         $patchOutput = & $python $modTool patch --manifest $manifestPath --game-root $gameRoot --payload-dir $buildRoot
         if ($LASTEXITCODE -ne 0) { throw "Archive patching failed with exit code $LASTEXITCODE." }
         $patchResult = ($patchOutput -join [Environment]::NewLine) | ConvertFrom-Json

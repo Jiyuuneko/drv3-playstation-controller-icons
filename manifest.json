@@ -1,6 +1,6 @@
 {
   "project": "Danganronpa V3 PlayStation Controller Icons",
-  "version": "1.3.0-source",
+  "version": "0.2.0",
   "distribution_model": "Source-only builder; no extracted game files or official controller artwork are distributed.",
   "supported_game": {
     "name": "Danganronpa V3: Killing Harmony for PC",
@@ -15,7 +15,13 @@
     "game_path_pattern": "data/win/partition_data_win_{language_lower}.cpk",
     "target_entry_pattern": "flash/help/help_tutorial_xone_{language}.spc",
     "source_entry_pattern": "flash/help/help_tutorial_ps4_{language}.spc",
-    "scrum_entry_pattern": "flash/trial/t_scrum_push_{language}.spc"
+    "scrum_entry_pattern": "flash/trial/t_scrum_push_{language}.spc",
+    "argument_armament_entry_pattern": "flash/trial/t_riron_rythm_{language}.spc",
+    "carddeath_get_entry_pattern": "flash/rsc/carddeath_get_{language}.spc",
+    "carddeath_guide_entry_pattern": "flash/rsc/carddeath_guide_{language}.spc",
+    "chara_card_check_entry_pattern": "flash/rsc/success_chara_card_check_{language}.spc",
+    "course_check_entry_pattern": "flash/rsc/success_hud_course_check_{language}.spc",
+    "step_guide_entry_pattern": "flash/rsc/success_step_{language}.spc"
   },
   "archive_patches": [
     {
@@ -36,6 +42,104 @@
         "srd_sha256": "79E66EC8CA8BFF651158A99B4B6F352D70360B4F9120B18A2EA6B36AA00DDC07",
         "srdv_size": 974848,
         "srdv_sha256": "F06077581FF7768FCC82F115556B96E0A38F376B1D5060EE688A551230DFB934"
+      }
+    },
+    {
+      "id": "base_rpg_create_tab_prompts",
+      "game_path": "data/win/partition_data_win.cpk",
+      "archive_size": 12527021512,
+      "original_archive_sha256": "9CA2077E1E0764A2AB2E54BE778DA9E5EC0D159C1CAE69A82348276A30FD8FD9",
+      "payload_name": "rpg_create_tab_lr.spc",
+      "target_entry": {
+        "path": "flash/rsc/rpg_create_tab_lr.spc",
+        "backup_name": "rpg_create_tab_lr.spc",
+        "allocation_size": 8192,
+        "original_size": 7136,
+        "original_sha256": "B0413D9A99106510625C660C453EA50747BDDC8BAC72FFA89D4EA0F2DCA60901"
+      }
+    },
+    {
+      "id": "base_success_skill_prompts",
+      "game_path": "data/win/partition_data_win.cpk",
+      "archive_size": 12527021512,
+      "original_archive_sha256": "9CA2077E1E0764A2AB2E54BE778DA9E5EC0D159C1CAE69A82348276A30FD8FD9",
+      "payload_name": "success_skill_parts.spc",
+      "target_entry": {
+        "path": "flash/rsc/success_skill_parts.spc",
+        "backup_name": "success_skill_parts.spc",
+        "allocation_size": 10240,
+        "original_size": 9280,
+        "original_sha256": "02ACB69CDC3F08E547725BBD348D67D9066692BB1CA3DDA9EEC1250BBEC540E4"
+      }
+    },
+    {
+      "id": "base_rebuttal_showdown_prompts",
+      "game_path": "data/win/partition_data_win.cpk",
+      "archive_size": 12527021512,
+      "original_archive_sha256": "9CA2077E1E0764A2AB2E54BE778DA9E5EC0D159C1CAE69A82348276A30FD8FD9",
+      "payload_name": "t_hr_seri_push.spc",
+      "target_entry": {
+        "path": "flash/trial/t_hr_seri_push.spc",
+        "backup_name": "t_hr_seri_push.spc",
+        "allocation_size": 235520,
+        "original_size": 235168,
+        "original_sha256": "C51FCC4E41915EE287C37B2E88027DCEE207EDE38C2858309E6CB560EB9AA304"
+      }
+    },
+    {
+      "id": "base_argument_finish_circle",
+      "game_path": "data/win/partition_data_win.cpk",
+      "archive_size": 12527021512,
+      "original_archive_sha256": "9CA2077E1E0764A2AB2E54BE778DA9E5EC0D159C1CAE69A82348276A30FD8FD9",
+      "payload_name": "t_riron_todome_circle.spc",
+      "target_entry": {
+        "path": "flash/trial/t_riron_todome_circle.spc",
+        "backup_name": "t_riron_todome_circle.spc",
+        "allocation_size": 550912,
+        "original_size": 550208,
+        "original_sha256": "D582B8F8A55DCAC9D5548E30DD44B4B97A5FE895CD1322022A9CC2F82C3AD4AE"
+      }
+    },
+    {
+      "id": "base_argument_finish_cross",
+      "game_path": "data/win/partition_data_win.cpk",
+      "archive_size": 12527021512,
+      "original_archive_sha256": "9CA2077E1E0764A2AB2E54BE778DA9E5EC0D159C1CAE69A82348276A30FD8FD9",
+      "payload_name": "t_riron_todome_cross.spc",
+      "target_entry": {
+        "path": "flash/trial/t_riron_todome_cross.spc",
+        "backup_name": "t_riron_todome_cross.spc",
+        "allocation_size": 595968,
+        "original_size": 595376,
+        "original_sha256": "9ACFB2C2A354A540EAE2342FB39D6261D8272ABC68304ACD2010D0307E518B2D"
+      }
+    },
+    {
+      "id": "base_argument_finish_square",
+      "game_path": "data/win/partition_data_win.cpk",
+      "archive_size": 12527021512,
+      "original_archive_sha256": "9CA2077E1E0764A2AB2E54BE778DA9E5EC0D159C1CAE69A82348276A30FD8FD9",
+      "payload_name": "t_riron_todome_square.spc",
+      "target_entry": {
+        "path": "flash/trial/t_riron_todome_square.spc",
+        "backup_name": "t_riron_todome_square.spc",
+        "allocation_size": 628736,
+        "original_size": 628576,
+        "original_sha256": "B7553C73EC3CFBEF7400AD6BA84ED13DDC4014A37FB4C22EB0402C08A2A2771E"
+      }
+    },
+    {
+      "id": "base_argument_finish_triangle",
+      "game_path": "data/win/partition_data_win.cpk",
+      "archive_size": 12527021512,
+      "original_archive_sha256": "9CA2077E1E0764A2AB2E54BE778DA9E5EC0D159C1CAE69A82348276A30FD8FD9",
+      "payload_name": "t_riron_todome_triangle.spc",
+      "target_entry": {
+        "path": "flash/trial/t_riron_todome_triangle.spc",
+        "backup_name": "t_riron_todome_triangle.spc",
+        "allocation_size": 559104,
+        "original_size": 558400,
+        "original_sha256": "29AC12B1A0CAA5520D705D089AFB361C053CA80169A2CCC1FD3706D6F0D81BC8"
       }
     }
   ],

@@ -110,6 +110,42 @@ SCRUM_PROMPT_TEXTURE_PAIRS = (
     ("t_scrum_push_button_triangle_miss.png", "t_scrum_push_button_triangle_miss_xone.png"),
 )
 
+ARGUMENT_ARMAMENT_TEXTURE_PAIRS = (
+    ("t_riron_rythm_button_circle.png", "t_riron_rythm_button_circle_xone.png"),
+    ("t_riron_rythm_button_cross.png", "t_riron_rythm_button_cross_xone.png"),
+    ("t_riron_rythm_button_square.png", "t_riron_rythm_button_square_xone.png"),
+    ("t_riron_rythm_button_triangle.png", "t_riron_rythm_button_triangle_xone.png"),
+    ("t_riron_rythm_renda_button_all.png", "t_riron_rythm_renda_button_all_xone.png"),
+)
+
+EXTRA_LANGUAGE_PROMPT_PACKAGES = (
+    ("language_carddeath_get_prompts", "Card Death reward", "carddeath_get_entry_pattern", 2),
+    ("language_carddeath_guide_prompts", "Card Death guide", "carddeath_guide_entry_pattern", 5),
+    (
+        "language_chara_card_check_prompts",
+        "character card guide",
+        "chara_card_check_entry_pattern",
+        1,
+    ),
+    (
+        "language_course_check_prompts",
+        "course check guide",
+        "course_check_entry_pattern",
+        1,
+    ),
+    ("language_step_guide_prompts", "step guide", "step_guide_entry_pattern", 1),
+)
+
+BASE_PROMPT_PACKAGES = (
+    ("base_rpg_create_tab_prompts", "RPG creation tabs", 2, False),
+    ("base_success_skill_prompts", "skill screen", 2, False),
+    ("base_rebuttal_showdown_prompts", "Rebuttal Showdown", 2, False),
+    ("base_argument_finish_circle", "Argument Armament Circle finish", 1, False),
+    ("base_argument_finish_cross", "Argument Armament Cross finish", 1, True),
+    ("base_argument_finish_square", "Argument Armament Square finish", 1, False),
+    ("base_argument_finish_triangle", "Argument Armament Triangle finish", 1, False),
+)
+
 
 def copy_named_texture(
     blob: bytearray,
@@ -119,20 +155,77 @@ def copy_named_texture(
 ) -> None:
     by_name = {str(item["name"]): int(item["index"]) for item in items}
     if source_name not in by_name or target_name not in by_name:
-        raise ValueError(f"missing Scrum Debate texture mapping: {source_name} -> {target_name}")
+        raise ValueError(f"missing texture mapping: {source_name} -> {target_name}")
     copy_texture(blob, items, by_name[source_name], by_name[target_name])
 
 
-def build_scrum_prompt_payload(original_spc: bytes) -> tuple[bytes, str]:
+def swap_named_texture(
+    blob: bytearray,
+    items: list[dict[str, object]],
+    source_name: str,
+    target_name: str,
+) -> None:
+    by_name = {str(item["name"]): int(item["index"]) for item in items}
+    if source_name not in by_name or target_name not in by_name:
+        raise ValueError(f"missing texture mapping: {source_name} -> {target_name}")
+    source = items[by_name[source_name]]
+    target = items[by_name[target_name]]
+    if source["stored_size"] != target["stored_size"] or source["width"] != target["width"]:
+        raise ValueError(f"incompatible texture descriptors: {source_name} -> {target_name}")
+    source_start = int(source["data_offset"])
+    target_start = int(target["data_offset"])
+    size = int(source["stored_size"])
+    source_payload = bytes(blob[source_start : source_start + size])
+    target_payload = bytes(blob[target_start : target_start + size])
+    blob[source_start : source_start + size] = target_payload
+    blob[target_start : target_start + size] = source_payload
+
+
+def build_named_prompt_payload(
+    original_spc: bytes,
+    texture_pairs: tuple[tuple[str, str], ...],
+    swap: bool = False,
+) -> tuple[bytes, str]:
     archive = parse_spc(original_spc)
     srd = archive.one("texture.srd").unpacked()
     srdv = archive.one("texture.srdv").unpacked()
     items = descriptors(srd)
     modified = bytearray(srdv)
-    for source_name, target_name in SCRUM_PROMPT_TEXTURE_PAIRS:
-        copy_named_texture(modified, items, source_name, target_name)
+    for source_name, target_name in texture_pairs:
+        if swap:
+            swap_named_texture(modified, items, source_name, target_name)
+        else:
+            copy_named_texture(modified, items, source_name, target_name)
     archive.replace("texture.srdv", bytes(modified))
     return archive.rebuild(), sha256(bytes(modified))
+
+
+def build_scrum_prompt_payload(original_spc: bytes) -> tuple[bytes, str]:
+    return build_named_prompt_payload(original_spc, SCRUM_PROMPT_TEXTURE_PAIRS)
+
+
+def build_argument_armament_payload(original_spc: bytes) -> tuple[bytes, str]:
+    return build_named_prompt_payload(original_spc, ARGUMENT_ARMAMENT_TEXTURE_PAIRS)
+
+
+def build_xone_redirect_payload(
+    original_spc: bytes,
+    expected_xone_textures: int,
+    swap: bool = False,
+) -> tuple[bytes, str]:
+    archive = parse_spc(original_spc)
+    items = descriptors(archive.one("texture.srd").unpacked())
+    names = {str(item["name"]) for item in items}
+    targets = sorted(name for name in names if "_xone" in name)
+    if len(targets) != expected_xone_textures:
+        raise ValueError(
+            f"expected {expected_xone_textures} XOne textures, found {len(targets)}"
+        )
+    pairs = tuple((target.replace("_xone", "", 1), target) for target in targets)
+    missing_sources = [source for source, _target in pairs if source not in names]
+    if missing_sources:
+        raise ValueError(f"missing shipped PlayStation texture: {missing_sources[0]}")
+    return build_named_prompt_payload(original_spc, pairs, swap=swap)
 
 
 def original_archive(manifest: dict[str, object], patch_id: str) -> dict[str, object]:
@@ -153,6 +246,11 @@ def prepare_language_manifest(args: argparse.Namespace) -> dict[str, object]:
     target_path = str(template["target_entry_pattern"]).format(**values)
     source_path = str(template["source_entry_pattern"]).format(**values)
     scrum_path = str(template["scrum_entry_pattern"]).format(**values)
+    argument_armament_path = str(template["argument_armament_entry_pattern"]).format(**values)
+    extra_prompt_paths = {
+        patch_id: str(template[template_key]).format(**values)
+        for patch_id, _label, template_key, _expected_count in EXTRA_LANGUAGE_PROMPT_PACKAGES
+    }
     archive_path = args.game_root / Path(game_path)
     if not archive_path.is_file():
         raise ValueError(f"active language archive is missing: {archive_path}")
@@ -160,6 +258,11 @@ def prepare_language_manifest(args: argparse.Namespace) -> dict[str, object]:
         target = archive.read_entry(target_path)
         source = archive.read_entry(source_path)
         scrum = archive.read_entry(scrum_path)
+        argument_armament = archive.read_entry(argument_armament_path)
+        extra_prompts = {
+            patch_id: archive.read_entry(path)
+            for patch_id, path in extra_prompt_paths.items()
+        }
     target_hash = sha256(target)
     source_hash = sha256(source)
     current_archive_hash = file_sha256(archive_path)
@@ -260,9 +363,82 @@ def prepare_language_manifest(args: argparse.Namespace) -> dict[str, object]:
         },
     }
 
+    argument_armament_hash = sha256(argument_armament)
+    argument_armament_details = inspect_entry(
+        archive_path,
+        argument_armament_path,
+        len(argument_armament),
+        argument_armament_hash,
+        0,
+        "",
+    )
+    argument_armament_payload, _argument_armament_srdv_hash = build_argument_armament_payload(
+        argument_armament
+    )
+    if (
+        argument_armament_details["state"] != "original"
+        or len(argument_armament_payload) > int(argument_armament_details["allocation_size"])
+    ):
+        raise ValueError(
+            "active language Argument Armament prompts do not fit the expected fixed-allocation layout"
+        )
+    argument_armament_patch = {
+        "id": "language_argument_armament_prompts",
+        "game_path": game_path,
+        "archive_size": archive_path.stat().st_size,
+        "original_archive_sha256": original_archive_hash,
+        "payload_name": f"t_riron_rythm_{language}.spc",
+        "target_entry": {
+            "path": argument_armament_path,
+            "backup_name": f"t_riron_rythm_{language}.spc",
+            "allocation_size": int(argument_armament_details["allocation_size"]),
+            "original_size": len(argument_armament),
+            "original_sha256": argument_armament_hash,
+        },
+    }
+
+    extra_prompt_patches = []
+    for patch_id, label, _template_key, expected_count in EXTRA_LANGUAGE_PROMPT_PACKAGES:
+        prompt_path = extra_prompt_paths[patch_id]
+        prompt = extra_prompts[patch_id]
+        prompt_hash = sha256(prompt)
+        prompt_details = inspect_entry(
+            archive_path,
+            prompt_path,
+            len(prompt),
+            prompt_hash,
+            0,
+            "",
+        )
+        prompt_payload, _prompt_srdv_hash = build_xone_redirect_payload(prompt, expected_count)
+        if prompt_details["state"] != "original" or len(prompt_payload) > int(
+            prompt_details["allocation_size"]
+        ):
+            raise ValueError(
+                f"active language {label} prompts do not fit the expected fixed-allocation layout"
+            )
+        extra_prompt_patches.append(
+            {
+                "id": patch_id,
+                "game_path": game_path,
+                "archive_size": archive_path.stat().st_size,
+                "original_archive_sha256": original_archive_hash,
+                "payload_name": Path(prompt_path).name,
+                "target_entry": {
+                    "path": prompt_path,
+                    "backup_name": Path(prompt_path).name,
+                    "allocation_size": int(prompt_details["allocation_size"]),
+                    "original_size": len(prompt),
+                    "original_sha256": prompt_hash,
+                },
+            }
+        )
+
     runtime = json.loads(json.dumps(manifest))
     runtime["supported_game"]["language_code"] = language
-    runtime["archive_patches"].extend((help_patch, scrum_patch))
+    runtime["archive_patches"].extend(
+        (help_patch, scrum_patch, argument_armament_patch, *extra_prompt_patches)
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.output.with_suffix(args.output.suffix + ".tmp")
     temporary.write_text(json.dumps(runtime, indent=2), encoding="utf-8")
@@ -275,6 +451,10 @@ def prepare_language_manifest(args: argparse.Namespace) -> dict[str, object]:
         "target_entry": help_patch["target_entry"],
         "source_entry": help_patch["source_entry"],
         "scrum_target_entry": scrum_patch["target_entry"],
+        "argument_armament_target_entry": argument_armament_patch["target_entry"],
+        "extra_prompt_target_entries": {
+            patch["id"]: patch["target_entry"] for patch in extra_prompt_patches
+        },
     }
 
 
@@ -425,6 +605,29 @@ def build(args: argparse.Namespace) -> dict[str, object]:
         "PlayStation help source",
     )
 
+    base_prompt_payloads = []
+    for patch_id, label, expected_count, swap in BASE_PROMPT_PACKAGES:
+        matches = [item for item in manifest["archive_patches"] if item["id"] == patch_id]
+        if len(matches) > 1:
+            raise ValueError(f"manifest defines more than one {label} patch")
+        if not matches:
+            continue
+        patch = matches[0]
+        entry = patch["target_entry"]
+        original = checked_file(
+            target_backup_path(patch, args.original_entry_dir),
+            int(entry["original_size"]),
+            str(entry["original_sha256"]),
+            f"original {label} entry",
+        )
+        payload, srdv_hash = build_xone_redirect_payload(original, expected_count, swap=swap)
+        if len(payload) > int(entry["allocation_size"]):
+            raise ValueError(
+                f"rebuilt {label} SPC is {len(payload)} bytes; "
+                f"allocation is {entry['allocation_size']}"
+            )
+        base_prompt_payloads.append((patch, label, payload, srdv_hash, swap))
+
     scrum_matches = [
         item for item in manifest["archive_patches"] if item["id"] == "language_scrum_prompts"
     ]
@@ -448,14 +651,72 @@ def build(args: argparse.Namespace) -> dict[str, object]:
                 f"allocation is {scrum_entry['allocation_size']}"
             )
 
+    argument_armament_matches = [
+        item
+        for item in manifest["archive_patches"]
+        if item["id"] == "language_argument_armament_prompts"
+    ]
+    if len(argument_armament_matches) > 1:
+        raise ValueError("manifest defines more than one Argument Armament patch")
+    argument_armament_patch = (
+        argument_armament_matches[0] if len(argument_armament_matches) == 1 else None
+    )
+    argument_armament_payload = None
+    argument_armament_srdv_hash = None
+    if argument_armament_patch is not None:
+        argument_armament_entry = argument_armament_patch["target_entry"]
+        original_argument_armament = checked_file(
+            target_backup_path(argument_armament_patch, args.original_entry_dir),
+            int(argument_armament_entry["original_size"]),
+            str(argument_armament_entry["original_sha256"]),
+            "original Argument Armament entry",
+        )
+        argument_armament_payload, argument_armament_srdv_hash = build_argument_armament_payload(
+            original_argument_armament
+        )
+        if len(argument_armament_payload) > int(argument_armament_entry["allocation_size"]):
+            raise ValueError(
+                f"rebuilt Argument Armament SPC is {len(argument_armament_payload)} bytes; "
+                f"allocation is {argument_armament_entry['allocation_size']}"
+            )
+
+    extra_prompt_payloads = []
+    for patch_id, label, _template_key, expected_count in EXTRA_LANGUAGE_PROMPT_PACKAGES:
+        matches = [item for item in manifest["archive_patches"] if item["id"] == patch_id]
+        if len(matches) > 1:
+            raise ValueError(f"manifest defines more than one {label} patch")
+        if not matches:
+            continue
+        patch = matches[0]
+        entry = patch["target_entry"]
+        original = checked_file(
+            target_backup_path(patch, args.original_entry_dir),
+            int(entry["original_size"]),
+            str(entry["original_sha256"]),
+            f"original {label} entry",
+        )
+        payload, srdv_hash = build_xone_redirect_payload(original, expected_count)
+        if len(payload) > int(entry["allocation_size"]):
+            raise ValueError(
+                f"rebuilt {label} SPC is {len(payload)} bytes; "
+                f"allocation is {entry['allocation_size']}"
+            )
+        extra_prompt_payloads.append((patch, label, payload, srdv_hash))
+
     args.output_dir.mkdir(parents=True, exist_ok=True)
     resident_path = payload_for(resident_patch, args.output_dir)
     help_path = payload_for(help_patch, args.output_dir)
     report_path = args.output_dir / "build-report.json"
     resident_path.write_bytes(resident_payload)
     help_path.write_bytes(help_payload)
+    for patch, _label, payload, _srdv_hash, _swap in base_prompt_payloads:
+        payload_for(patch, args.output_dir).write_bytes(payload)
     if scrum_patch is not None and scrum_payload is not None:
         payload_for(scrum_patch, args.output_dir).write_bytes(scrum_payload)
+    if argument_armament_patch is not None and argument_armament_payload is not None:
+        payload_for(argument_armament_patch, args.output_dir).write_bytes(argument_armament_payload)
+    for patch, _label, payload, _srdv_hash in extra_prompt_payloads:
+        payload_for(patch, args.output_dir).write_bytes(payload)
     report = {
         "variant": args.variant,
         "resident_payload": {
@@ -470,6 +731,21 @@ def build(args: argparse.Namespace) -> dict[str, object]:
             "sha256": sha256(help_payload),
         },
     }
+    if base_prompt_payloads:
+        report["base_prompt_payloads"] = []
+        for patch, label, payload, srdv_hash, swap in base_prompt_payloads:
+            path = payload_for(patch, args.output_dir)
+            report["base_prompt_payloads"].append(
+                {
+                    "id": patch["id"],
+                    "label": label,
+                    "path": str(path.resolve()),
+                    "size": len(payload),
+                    "sha256": sha256(payload),
+                    "modified_srdv_sha256": srdv_hash,
+                    "texture_operation": "swap" if swap else "copy",
+                }
+            )
     if scrum_patch is not None and scrum_payload is not None:
         scrum_path = payload_for(scrum_patch, args.output_dir)
         report["scrum_payload"] = {
@@ -478,6 +754,28 @@ def build(args: argparse.Namespace) -> dict[str, object]:
             "sha256": sha256(scrum_payload),
             "modified_srdv_sha256": scrum_srdv_hash,
         }
+    if argument_armament_patch is not None and argument_armament_payload is not None:
+        argument_armament_path = payload_for(argument_armament_patch, args.output_dir)
+        report["argument_armament_payload"] = {
+            "path": str(argument_armament_path.resolve()),
+            "size": len(argument_armament_payload),
+            "sha256": sha256(argument_armament_payload),
+            "modified_srdv_sha256": argument_armament_srdv_hash,
+        }
+    if extra_prompt_payloads:
+        report["extra_prompt_payloads"] = []
+        for patch, label, payload, srdv_hash in extra_prompt_payloads:
+            path = payload_for(patch, args.output_dir)
+            report["extra_prompt_payloads"].append(
+                {
+                    "id": patch["id"],
+                    "label": label,
+                    "path": str(path.resolve()),
+                    "size": len(payload),
+                    "sha256": sha256(payload),
+                    "modified_srdv_sha256": srdv_hash,
+                }
+            )
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     return report
 
