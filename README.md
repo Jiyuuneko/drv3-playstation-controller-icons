@@ -7,8 +7,7 @@ Replaces the Xbox-style controller icons in **Danganronpa V3: Killing Harmony** 
 ## Requirements
 
 - Steam version of Danganronpa V3 for Windows.
-- Windows PowerShell 5.1 or newer.
-- Python 3.9 or newer available as `python` on `PATH`.
+- Python 3.10 or newer available as `python` on `PATH`.
 - About 50 MB of free space.
 
 ## Installation
@@ -50,6 +49,7 @@ Close the game, run `DualSense_UI_Mod_Manager.bat`, and choose **4**. If the com
 - Shared runtime icons are language-independent. Localized controller-help, Scrum Debate, Argument Armament, and other controller-guide graphics use their shipped PlayStation versions.
 - The controller-help illustration uses the game's shipped DualShock 4 artwork, not a custom DualSense controller drawing.
 - The mod changes displayed controller graphics only; it does not change controller detection, button mappings, or input settings.
+- The manager and archive patcher are readable Python source; the BAT file only starts the manager.
 - For safety, the installer checks the game files it needs before writing and stops if they do not match a supported or previously installed state.
 - This source-only repository contains no extracted game archives or official Sony artwork.
 - Generated files and compact rollback data are stored in `DualSense_UI_Mod_Data`; do not redistribute that folder.
